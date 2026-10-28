@@ -29,7 +29,7 @@ A validated marketplace order containing the relevant producer-specific order el
 
 ---
 
-## Functionality 2: Payment Processing and Order Confirmation
+## Functionality 2: Simulated Payment Processing and Order Confirmation
 
 ### Description
 This functionality manages the financial side of the order. It calculates producer payment allocations and the marketplace commission, communicates with an external payment service, and handles order confirmation.
