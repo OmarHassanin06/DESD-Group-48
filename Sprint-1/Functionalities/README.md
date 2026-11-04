@@ -83,4 +83,3 @@ I plan to use **Camunda service tasks** for commission calculations and simulate
 
 **Functionality 2** receives the validated order, processes simulated payment and finalises the purchase.
 
-Both functionalities will be developed into detailed operational BPMN models during Sprint 2, followed by complete Camunda automation and integration during Sprint 3, subject to tutor approval.
