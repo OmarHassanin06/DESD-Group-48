@@ -2,63 +2,85 @@
 
 ## Overview
 
-For the DESD project, I have selected **Use Case 2: Customer Multi-Vendor Order, Checkout and Payment**.
+For the DESD project, I selected **Use Case 2: Customer Multi-Vendor Order, Checkout and Payment**.
 
-I have identified two major functionalities that cover the customer ordering process, from checkout and stock validation to payment processing and order confirmation.
+I identified two major functionalities covering the customer ordering process, from checkout and stock validation to simulated payment and order confirmation.
 
 ---
 
 ## Functionality 1: Multi-Vendor Checkout and Order Management
 
 ### Description
-This functionality allows customers to purchase products from multiple producers in a single order. It ensures that products are available, determines delivery or collection arrangements, and organises the order for each producer.
+
+This functionality manages customer checkout, validates product availability and creates orders involving multiple producers.
 
 ### Key Responsibilities
-- Validate product availability and requested quantities.
-- Inform customers if products are unavailable or stock is insufficient.
+
+- Check product availability and stock quantities.
+- Allow customers to amend their basket if stock is insufficient.
 - Determine delivery or collection arrangements.
-- Allow customers to review and confirm their purchase.
-- Create the overall marketplace order.
-- Separate the order into producer-specific order elements.
+- Allow customers to review and confirm their order.
+- Create an overall order with separate producer-specific elements.
 
-### Input
-Customer's shopping basket and checkout request.
+### How It Works
 
-### Output
-A validated marketplace order containing the relevant producer-specific order elements, ready for payment.
+When a customer proceeds to checkout, the system checks whether the requested products are available.
+
+If stock is insufficient, the customer must amend their basket. Otherwise, the system determines delivery or collection arrangements and allows the customer to confirm their purchase.
+
+The marketplace then creates the order and separates it into producer-specific elements before passing it to the payment process.
+
+### Planned Implementation
+
+I plan to use **Camunda Forms** for order confirmation, **service tasks** for stock validation and order creation, and **gateways** to handle unavailable products.
+
+**Input:** Customer's basket and checkout request.
+
+**Output:** Validated marketplace order ready for payment.
 
 ---
 
 ## Functionality 2: Simulated Payment Processing and Order Confirmation
 
 ### Description
-This functionality manages the financial side of the order. It calculates producer payment allocations and the marketplace commission, communicates with an external payment service, and handles order confirmation.
+
+This functionality calculates payment allocations and the marketplace's 5% commission, processes simulated payments and confirms successful orders.
 
 ### Key Responsibilities
+
 - Calculate each producer's payment allocation.
 - Calculate the marketplace's **5% commission**.
-- Submit payment requests to an external or simulated payment service.
-- Handle successful, declined and unavailable payment responses.
-- Allow payment retries or appropriate exception handling.
-- Confirm orders after successful payment.
-- Update product inventory quantities.
-- Notify the relevant producers and customer of successful orders.
+- Process payments using a simulated payment service.
+- Handle successful, declined and unavailable payments.
+- Allow payment retries and exception handling.
+- Confirm orders, update inventory and notify producers and customers.
 
-### Input
-A validated marketplace order ready for payment.
+### How It Works
 
-### Output
-- **Successful payment:** Confirmed order, updated inventory and relevant notifications.
-- **Failed payment:** Payment failure information with an opportunity to retry or follow an exception process.
+The system receives the validated order from Functionality 1 and calculates the total amount, producer allocations and marketplace commission.
+
+A payment request is sent to a simulated payment service, which can return three outcomes:
+
+- **Success:** Confirm the order, update inventory and send notifications.
+- **Declined:** Inform the customer and allow another payment attempt.
+- **Unavailable:** Follow an exception or retry process.
+
+For example, a £100 multi-vendor order would generate a £5 marketplace commission.
+
+### Planned Implementation
+
+I plan to use **Camunda service tasks** for commission calculations and simulated payment processing, **gateways** for payment decisions, and **Forms** for customer interaction and retries.
+
+**Input:** Validated marketplace order ready for payment.
+
+**Output:** Confirmed order with updated inventory and notifications, or a payment failure requiring further action.
 
 ---
 
 ## Relationship Between the Two Functionalities
 
-The two functionalities work together to complete the customer purchasing process.
-
 **Functionality 1** handles checkout, stock validation and order creation.
 
-**Functionality 2** receives the validated order, processes payment and finalises the purchase.
+**Functionality 2** receives the validated order, processes simulated payment and finalises the purchase.
 
-Both functionalities will be developed into detailed operational BPMN models and automated using Camunda in later sprints, subject to tutor approval.
+Both functionalities will be developed into detailed operational BPMN models during Sprint 2, followed by complete Camunda automation and integration during Sprint 3, subject to tutor approval.
