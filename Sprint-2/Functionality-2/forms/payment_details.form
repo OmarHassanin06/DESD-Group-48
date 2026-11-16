@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "text": "**Order {{orderId}}** – total to pay: £{{totalAmount}}",
+      "type": "text",
+      "layout": {
+        "row": "Row_1i5mwpd",
+        "columns": null
+      },
+      "id": "Field_0jp2os0"
+    },
+    {
+      "label": "Cardholder name",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0erdtgc",
+        "columns": null
+      },
+      "id": "Field_0toq67l",
+      "key": "cardholderName",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Card number",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0w72626",
+        "columns": null
+      },
+      "id": "Field_1oyjr7o",
+      "key": "cardNumber",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Pay now",
+      "action": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_0ho0mvi",
+        "columns": null
+      },
+      "id": "Field_1ek9hyw"
+    }
+  ],
+  "type": "default",
+  "id": "payment_details",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.53.0"
+  },
+  "schemaVersion": 19
+}

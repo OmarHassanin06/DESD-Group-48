@@ -1,0 +1,54 @@
+{
+  "components": [
+    {
+      "text": "Payment declined for order {{orderId}}. Attempt {{retryCounters.declines}} of 3.",
+      "type": "text",
+      "layout": {
+        "row": "Row_0d1xcwh",
+        "columns": null
+      },
+      "id": "Text_retry_info"
+    },
+    {
+      "label": "What would you like to do?",
+      "values": [
+        {
+          "label": "Try another card",
+          "value": "RETRY"
+        },
+        {
+          "label": "Cancel Order",
+          "value": "CANCEL"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_1ogla4m",
+        "columns": null
+      },
+      "key": "retryChoice",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Continue",
+      "action": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_0nn6vtp",
+        "columns": null
+      },
+      "id": "Field_1s3n0tv"
+    }
+  ],
+  "type": "default",
+  "id": "retry_decision",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.10.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.53.0"
+  },
+  "schemaVersion": 19
+}
