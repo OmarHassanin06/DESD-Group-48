@@ -1,0 +1,72 @@
+{
+  "components": [
+    {
+      "label": "Fulfilment method",
+      "values": [
+        {
+          "label": "Home delivery",
+          "value": "DELIVERY"
+        },
+        {
+          "label": "Collect from farm",
+          "value": "COLLECTION"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_1",
+        "columns": null
+      },
+      "id": "Field_FulfilmentMethod",
+      "key": "fulfilmentMethod",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Delivery address",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_2",
+        "columns": null
+      },
+      "id": "Field_DeliveryAddress",
+      "key": "deliveryAddress",
+      "conditional": {
+        "hide": "=fulfilmentMethod != \"DELIVERY\""
+      }
+    },
+    {
+      "label": "Collection time slot",
+      "values": [
+        {
+          "label": "Sat 10:00–12:00",
+          "value": "Sat 10:00–12:00"
+        },
+        {
+          "label": "Sat 14:00–16:00",
+          "value": "Sat 14:00–16:00"
+        }
+      ],
+      "type": "select",
+      "layout": {
+        "row": "Row_3",
+        "columns": null
+      },
+      "id": "Field_CollectionSlot",
+      "key": "collectionSlot",
+      "conditional": {
+        "hide": "=fulfilmentMethod != \"COLLECTION\""
+      }
+    }
+  ],
+  "type": "default",
+  "id": "fulfilment_choice",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.6.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.28.0"
+  },
+  "schemaVersion": 16
+}

@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_Checkout" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.28.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.6.0">
+  <bpmn:collaboration id="Collaboration_MultiVendorCheckout">
+    <bpmn:participant id="Participant_MultiVendorCheckout" name="Multi-Vendor Checkout" processRef="checkout_order" />
+  </bpmn:collaboration>
+  <bpmn:process id="checkout_order" name="Multi-Vendor Checkout" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_Checkout">
+      <bpmn:lane id="Lane_Customer" name="Customer">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewUnavailable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ChooseFulfilment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewConfirm</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Marketplace System">
+        <bpmn:flowNodeRef>Task_CheckStock</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_StockSufficient</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ContinueAvailable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_A</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RemoveUnavailable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_BasketEmpty</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_B</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DeliveryOrCollection</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CalcDeliveryFee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ArrangeCollection</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_MergeFulfilment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SplitOrder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CalcTotal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_OrderConfirmed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_C</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateOrder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_ReadyForPayment</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Customer proceeds to checkout">
+      <bpmn:outgoing>Flow_1_to_2</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="Task_CheckStock" name="Check stock availability">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=basket[item.qty > get value(stock, item.productId)]" resultVariable="unavailableItems" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1_to_2</bpmn:incoming>
+      <bpmn:incoming>Flow_7_to_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_2_to_3</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="Gateway_StockSufficient" name="Stock sufficient?" default="Flow_3_to_4">
+      <bpmn:incoming>Flow_2_to_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_3_to_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_3_to_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_ReviewUnavailable" name="Review unavailable items">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="review_unavailable_items" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3_to_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_4_to_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ContinueAvailable" name="Continue with available items?" default="Flow_5_to_EndA">
+      <bpmn:incoming>Flow_4_to_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_5_to_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_5_to_EndA</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_A" name="Order cancelled – stock unavailable">
+      <bpmn:incoming>Flow_5_to_EndA</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Task_RemoveUnavailable" name="Remove unavailable items">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=basket[item.qty &lt;= get value(stock, item.productId)]" resultVariable="basket" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_5_to_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_6_to_7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="Gateway_BasketEmpty" name="Basket empty?" default="Flow_7_to_2">
+      <bpmn:incoming>Flow_6_to_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_7_to_EndB</bpmn:outgoing>
+      <bpmn:outgoing>Flow_7_to_2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_B" name="Order cancelled – basket empty">
+      <bpmn:incoming>Flow_7_to_EndB</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_ChooseFulfilment" name="Choose delivery or collection">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="fulfilment_choice" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3_to_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_8_to_9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_DeliveryOrCollection" name="Delivery or collection?" default="Flow_9_to_10b">
+      <bpmn:incoming>Flow_8_to_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_9_to_10a</bpmn:outgoing>
+      <bpmn:outgoing>Flow_9_to_10b</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="Task_CalcDeliveryFee" name="Calculate delivery fee">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=3.50 * count(distinct values(basket.producerId))" resultVariable="deliveryFee" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_9_to_10a</bpmn:incoming>
+      <bpmn:outgoing>Flow_10a_to_11</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Task_ArrangeCollection" name="Arrange collection">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=0" resultVariable="deliveryFee" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_9_to_10b</bpmn:incoming>
+      <bpmn:outgoing>Flow_10b_to_11</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="Gateway_MergeFulfilment">
+      <bpmn:incoming>Flow_10a_to_11</bpmn:incoming>
+      <bpmn:incoming>Flow_10b_to_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_11_to_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="Task_SplitOrder" name="Split order by producer">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=for p in distinct values(basket.producerId) return {
+  producerId: p,
+  producerName: basket[item.producerId = p][1].producerName,
+  items: basket[item.producerId = p],
+  subtotal: sum(for i in basket[item.producerId = p] return i.price * i.qty)
+}" resultVariable="producerOrders" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_11_to_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_12_to_13</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Task_CalcTotal" name="Calculate order total">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=sum(producerOrders.subtotal) + deliveryFee" resultVariable="totalAmount" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_12_to_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_13_to_14</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="Task_ReviewConfirm" name="Review and confirm order">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="confirm_order" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_13_to_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_14_to_15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_OrderConfirmed" name="Order confirmed?" default="Flow_15_to_EndC">
+      <bpmn:incoming>Flow_14_to_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_15_to_16</bpmn:outgoing>
+      <bpmn:outgoing>Flow_15_to_EndC</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_C" name="Order cancelled by customer">
+      <bpmn:incoming>Flow_15_to_EndC</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Task_CreateOrder" name="Create order">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=&#34;ORD-&#34; + string(now())" resultVariable="orderId" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_15_to_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_16_to_17</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="EndEvent_ReadyForPayment" name="Order ready for payment">
+      <bpmn:incoming>Flow_16_to_17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1_to_2" sourceRef="StartEvent_1" targetRef="Task_CheckStock" />
+    <bpmn:sequenceFlow id="Flow_2_to_3" sourceRef="Task_CheckStock" targetRef="Gateway_StockSufficient" />
+    <bpmn:sequenceFlow id="Flow_3_to_8" name="Yes" sourceRef="Gateway_StockSufficient" targetRef="Task_ChooseFulfilment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=count(unavailableItems) = 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_3_to_4" name="No" sourceRef="Gateway_StockSufficient" targetRef="Task_ReviewUnavailable" />
+    <bpmn:sequenceFlow id="Flow_4_to_5" sourceRef="Task_ReviewUnavailable" targetRef="Gateway_ContinueAvailable" />
+    <bpmn:sequenceFlow id="Flow_5_to_6" name="Continue" sourceRef="Gateway_ContinueAvailable" targetRef="Task_RemoveUnavailable">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=stockDecision = "continue"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_5_to_EndA" name="Cancel" sourceRef="Gateway_ContinueAvailable" targetRef="EndEvent_A" />
+    <bpmn:sequenceFlow id="Flow_6_to_7" sourceRef="Task_RemoveUnavailable" targetRef="Gateway_BasketEmpty" />
+    <bpmn:sequenceFlow id="Flow_7_to_EndB" name="Yes" sourceRef="Gateway_BasketEmpty" targetRef="EndEvent_B">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=count(basket) = 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_7_to_2" name="No" sourceRef="Gateway_BasketEmpty" targetRef="Task_CheckStock" />
+    <bpmn:sequenceFlow id="Flow_8_to_9" sourceRef="Task_ChooseFulfilment" targetRef="Gateway_DeliveryOrCollection" />
+    <bpmn:sequenceFlow id="Flow_9_to_10a" name="Delivery" sourceRef="Gateway_DeliveryOrCollection" targetRef="Task_CalcDeliveryFee">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=fulfilmentMethod = "DELIVERY"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_9_to_10b" name="Collection" sourceRef="Gateway_DeliveryOrCollection" targetRef="Task_ArrangeCollection" />
+    <bpmn:sequenceFlow id="Flow_10a_to_11" sourceRef="Task_CalcDeliveryFee" targetRef="Gateway_MergeFulfilment" />
+    <bpmn:sequenceFlow id="Flow_10b_to_11" sourceRef="Task_ArrangeCollection" targetRef="Gateway_MergeFulfilment" />
+    <bpmn:sequenceFlow id="Flow_11_to_12" sourceRef="Gateway_MergeFulfilment" targetRef="Task_SplitOrder" />
+    <bpmn:sequenceFlow id="Flow_12_to_13" sourceRef="Task_SplitOrder" targetRef="Task_CalcTotal" />
+    <bpmn:sequenceFlow id="Flow_13_to_14" sourceRef="Task_CalcTotal" targetRef="Task_ReviewConfirm" />
+    <bpmn:sequenceFlow id="Flow_14_to_15" sourceRef="Task_ReviewConfirm" targetRef="Gateway_OrderConfirmed" />
+    <bpmn:sequenceFlow id="Flow_15_to_16" name="Confirm" sourceRef="Gateway_OrderConfirmed" targetRef="Task_CreateOrder">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=orderDecision = "confirm"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_15_to_EndC" name="Cancel" sourceRef="Gateway_OrderConfirmed" targetRef="EndEvent_C" />
+    <bpmn:sequenceFlow id="Flow_16_to_17" sourceRef="Task_CreateOrder" targetRef="EndEvent_ReadyForPayment" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_MultiVendorCheckout">
+      <bpmndi:BPMNShape id="Participant_MultiVendorCheckout_di" bpmnElement="Participant_MultiVendorCheckout" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2180" height="580" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Customer_di" bpmnElement="Lane_Customer" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="2150" height="190" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="190" y="270" width="2150" height="390" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="252" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="228" y="115" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckStock_di" bpmnElement="Task_CheckStock">
+        <dc:Bounds x="340" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_StockSufficient_di" bpmnElement="Gateway_StockSufficient" isMarkerVisible="true">
+        <dc:Bounds x="495" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="555" y="373" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReviewUnavailable_di" bpmnElement="Task_ReviewUnavailable">
+        <dc:Bounds x="580" y="130" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ContinueAvailable_di" bpmnElement="Gateway_ContinueAvailable" isMarkerVisible="true">
+        <dc:Bounds x="715" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="635" y="366" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_A_di" bpmnElement="EndEvent_A">
+        <dc:Bounds x="722" y="512" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="698" y="555" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RemoveUnavailable_di" bpmnElement="Task_RemoveUnavailable">
+        <dc:Bounds x="830" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_BasketEmpty_di" bpmnElement="Gateway_BasketEmpty" isMarkerVisible="true">
+        <dc:Bounds x="985" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1045" y="373" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_B_di" bpmnElement="EndEvent_B">
+        <dc:Bounds x="992" y="512" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="968" y="555" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ChooseFulfilment_di" bpmnElement="Task_ChooseFulfilment">
+        <dc:Bounds x="1120" y="130" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DeliveryOrCollection_di" bpmnElement="Gateway_DeliveryOrCollection" isMarkerVisible="true">
+        <dc:Bounds x="1265" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1202" y="366" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CalcDeliveryFee_di" bpmnElement="Task_CalcDeliveryFee">
+        <dc:Bounds x="1370" y="300" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ArrangeCollection_di" bpmnElement="Task_ArrangeCollection">
+        <dc:Bounds x="1370" y="420" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MergeFulfilment_di" bpmnElement="Gateway_MergeFulfilment" isMarkerVisible="true">
+        <dc:Bounds x="1515" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SplitOrder_di" bpmnElement="Task_SplitOrder">
+        <dc:Bounds x="1610" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CalcTotal_di" bpmnElement="Task_CalcTotal">
+        <dc:Bounds x="1750" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReviewConfirm_di" bpmnElement="Task_ReviewConfirm">
+        <dc:Bounds x="1870" y="130" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_OrderConfirmed_di" bpmnElement="Gateway_OrderConfirmed" isMarkerVisible="true">
+        <dc:Bounds x="1995" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1905" y="373" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_C_di" bpmnElement="EndEvent_C">
+        <dc:Bounds x="2002" y="512" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1981" y="555" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateOrder_di" bpmnElement="Task_CreateOrder">
+        <dc:Bounds x="2100" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ReadyForPayment_di" bpmnElement="EndEvent_ReadyForPayment">
+        <dc:Bounds x="2252" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2233" y="405" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_to_2_di" bpmnElement="Flow_1_to_2">
+        <di:waypoint x="270" y="188" />
+        <di:waypoint x="270" y="380" />
+        <di:waypoint x="340" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_to_3_di" bpmnElement="Flow_2_to_3">
+        <di:waypoint x="440" y="380" />
+        <di:waypoint x="495" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_to_8_di" bpmnElement="Flow_3_to_8">
+        <di:waypoint x="520" y="355" />
+        <di:waypoint x="520" y="100" />
+        <di:waypoint x="1170" y="100" />
+        <di:waypoint x="1170" y="130" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="531" y="313" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_to_4_di" bpmnElement="Flow_3_to_4">
+        <di:waypoint x="520" y="405" />
+        <di:waypoint x="520" y="450" />
+        <di:waypoint x="560" y="450" />
+        <di:waypoint x="560" y="170" />
+        <di:waypoint x="580" y="170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="532" y="423" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_to_5_di" bpmnElement="Flow_4_to_5">
+        <di:waypoint x="680" y="170" />
+        <di:waypoint x="740" y="170" />
+        <di:waypoint x="740" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_to_6_di" bpmnElement="Flow_5_to_6">
+        <di:waypoint x="765" y="380" />
+        <di:waypoint x="830" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="775" y="362" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_to_EndA_di" bpmnElement="Flow_5_to_EndA">
+        <di:waypoint x="740" y="405" />
+        <di:waypoint x="740" y="512" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="748" y="443" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_to_7_di" bpmnElement="Flow_6_to_7">
+        <di:waypoint x="930" y="380" />
+        <di:waypoint x="985" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_to_EndB_di" bpmnElement="Flow_7_to_EndB">
+        <di:waypoint x="1010" y="405" />
+        <di:waypoint x="1010" y="512" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1016" y="443" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_to_2_di" bpmnElement="Flow_7_to_2">
+        <di:waypoint x="1010" y="355" />
+        <di:waypoint x="1010" y="300" />
+        <di:waypoint x="390" y="300" />
+        <di:waypoint x="390" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="988" y="313" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_to_9_di" bpmnElement="Flow_8_to_9">
+        <di:waypoint x="1220" y="170" />
+        <di:waypoint x="1290" y="170" />
+        <di:waypoint x="1290" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_to_10a_di" bpmnElement="Flow_9_to_10a">
+        <di:waypoint x="1290" y="355" />
+        <di:waypoint x="1290" y="340" />
+        <di:waypoint x="1370" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1305" y="322" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_to_10b_di" bpmnElement="Flow_9_to_10b">
+        <di:waypoint x="1290" y="405" />
+        <di:waypoint x="1290" y="460" />
+        <di:waypoint x="1370" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1301" y="443" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10a_to_11_di" bpmnElement="Flow_10a_to_11">
+        <di:waypoint x="1470" y="340" />
+        <di:waypoint x="1490" y="340" />
+        <di:waypoint x="1490" y="380" />
+        <di:waypoint x="1515" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10b_to_11_di" bpmnElement="Flow_10b_to_11">
+        <di:waypoint x="1470" y="460" />
+        <di:waypoint x="1490" y="460" />
+        <di:waypoint x="1490" y="380" />
+        <di:waypoint x="1515" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_to_12_di" bpmnElement="Flow_11_to_12">
+        <di:waypoint x="1565" y="380" />
+        <di:waypoint x="1610" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_to_13_di" bpmnElement="Flow_12_to_13">
+        <di:waypoint x="1710" y="380" />
+        <di:waypoint x="1750" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_to_14_di" bpmnElement="Flow_13_to_14">
+        <di:waypoint x="1850" y="380" />
+        <di:waypoint x="1870" y="380" />
+        <di:waypoint x="1870" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_to_15_di" bpmnElement="Flow_14_to_15">
+        <di:waypoint x="1920" y="210" />
+        <di:waypoint x="2020" y="210" />
+        <di:waypoint x="2020" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_to_16_di" bpmnElement="Flow_15_to_16">
+        <di:waypoint x="2045" y="380" />
+        <di:waypoint x="2100" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_to_EndC_di" bpmnElement="Flow_15_to_EndC">
+        <di:waypoint x="2020" y="405" />
+        <di:waypoint x="2020" y="512" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_to_17_di" bpmnElement="Flow_16_to_17">
+        <di:waypoint x="2200" y="380" />
+        <di:waypoint x="2252" y="380" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,45 @@
+{
+  "components": [
+    {
+      "text": "{{#loop producerOrders}}\n- {{producerName}}: £{{subtotal}}\n{{/loop}}\n\nDelivery: £{{deliveryFee}}\n\n**Total: £{{totalAmount}}**",
+      "type": "text",
+      "layout": {
+        "row": "Row_1",
+        "columns": null
+      },
+      "id": "Field_OrderSummary"
+    },
+    {
+      "label": "Order confirmation",
+      "values": [
+        {
+          "label": "Confirm order",
+          "value": "confirm"
+        },
+        {
+          "label": "Cancel order",
+          "value": "cancel"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_2",
+        "columns": null
+      },
+      "id": "Field_OrderDecision",
+      "key": "orderDecision",
+      "validate": {
+        "required": true
+      }
+    }
+  ],
+  "type": "default",
+  "id": "confirm_order",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.6.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.28.0"
+  },
+  "schemaVersion": 16
+}

@@ -1,0 +1,45 @@
+{
+  "components": [
+    {
+      "text": "Some items don't have enough stock:\n{{#loop unavailableItems}}\n- {{name}} (you wanted {{qty}})\n{{/loop}}",
+      "type": "text",
+      "layout": {
+        "row": "Row_1",
+        "columns": null
+      },
+      "id": "Field_TextUnavailable"
+    },
+    {
+      "label": "How would you like to proceed?",
+      "values": [
+        {
+          "label": "Remove them and continue",
+          "value": "continue"
+        },
+        {
+          "label": "Cancel order",
+          "value": "cancel"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_2",
+        "columns": null
+      },
+      "id": "Field_StockDecision",
+      "key": "stockDecision",
+      "validate": {
+        "required": true
+      }
+    }
+  ],
+  "type": "default",
+  "id": "review_unavailable_items",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.6.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.28.0"
+  },
+  "schemaVersion": 16
+}
