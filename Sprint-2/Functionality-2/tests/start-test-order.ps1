@@ -9,15 +9,14 @@ $body = @'
 {
   "processDefinitionId": "payment_confirmation",
   "variables": {
-    "orderId": "ORD-1001",
-    "customerId": "C-1",
+    "orderId": "ORD-20261119120000000",
     "customerEmail": "test@example.com",
-    "totalAmount": 100,
+    "totalAmount": 15.2,
     "producerOrders": [
-      {"producerId": "P1", "producerName": "Farm A", "subtotal": 60,
-       "items": [{"productId": "PR1", "name": "Tomatoes", "qty": 2, "unitPrice": 30}]},
-      {"producerId": "P2", "producerName": "Bakery B", "subtotal": 40,
-       "items": [{"productId": "PR2", "name": "Bread", "qty": 4, "unitPrice": 10}]}
+      {"producerId": "P1", "producerName": "Farm A", "subtotal": 7,
+       "items": [{"productId": "egg", "name": "Free-range eggs (6)", "producerId": "P1", "producerName": "Farm A", "price": 3.5, "qty": 2}]},
+      {"producerId": "P2", "producerName": "Farm B", "subtotal": 1.2,
+       "items": [{"productId": "milk", "name": "Whole milk 1L", "producerId": "P2", "producerName": "Farm B", "price": 1.2, "qty": 1}]}
     ]
   }
 }

@@ -32,7 +32,7 @@ Card number           Result
 The variables that go into the function (from Functionality 1).
 This data includes orderId, customerId, customerEmail, totalAmount and producerOrders.
 (Each: producerId, producerName, subtotal,
-`items[{productId, name, qty, unitPrice}]`).
+`items[{productId, name, producerId, producerName, price, qty}]`)
 
 ## Output variables
 These are the key terms included in the order information.The main terms in the order information are:
@@ -45,3 +45,20 @@ The payment service is emulated by a script task, a real implementation would be
   (PCI DSS, GDPR).
 Traceability: The process clarifies the strategic BPMN subprocess
   Process Payments & Confirm Orders.
+
+
+## Use of generative AI
+
+**Tool used:Claude (Anthropic)
+As camunda was something new to me I used Claude to help me understand the Camunda BPMN process 
+
+Used for:
+- Guidance on the process structure and which BPMN elements to use
+- Explaining and drafting FEEL expressions in the script tasks and gateway conditions
+- Test data, test scenarios and the test script
+- Drafting this README
+
+How the BPMN diagram and forms were created:I drew the BPMN model (pool, lanes,
+tasks, gateways, events) and built the Camunda Forms myself in Camunda,
+and deployed and tested every path in Camunda. I reviewed all AI-assisted logic
+and can explain how each part of the process works.
